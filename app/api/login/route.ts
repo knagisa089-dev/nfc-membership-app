@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const PASSWORD = process.env.APP_PASSWORD ?? 'password123'
+const PASSWORD = 'cafeplage0809'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   response.cookies.set('auth', PASSWORD, {
     httpOnly: true,
     secure: true,
-    maxAge: 60 * 60 * 24 * 30, // 30日間
+    maxAge: 60 * 60 * 24 * 30,
     path: '/',
   })
 
