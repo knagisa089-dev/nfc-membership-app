@@ -33,6 +33,7 @@ export default function Home() {
   const [expiresAt, setExpiresAt] = useState('')
   const [showScanUrl, setShowScanUrl] = useState(false)
   const [origin, setOrigin] = useState('')
+  const [search, setSearch] = useState('')
 
   const load = () =>
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
@@ -74,6 +75,16 @@ export default function Home() {
   const scanUrl = `${origin}/scan?tid=${tenant?.id}&uid=`
   const active = customers.filter(c => c.subscription?.status === 'ACTIVE').length
   const expired = customers.filter(c => c.subscription?.status === 'EXPIRED').length
+
+  const filtered = customers.filter(c => {
+    if (!search) return true
+    const q = search.toLowerCase()
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.phone?.includes(q)
+    )
+  })
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -166,15 +177,23 @@ export default function Home() {
         )}
 
         <div className="bg-white rounded-xl border border-gray-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="font-semibold text-gray-800">顧客一覧</h2>
-            <button onClick={() => setShowForm(true)} className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">+ 顧客を追加</button>
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center gap-4">
+            <h2 className="font-semibold text-gray-800 flex-shrink-0">顧客一覧</h2>
+            <input
+              className="flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm"
+              placeholder="名前・メール・電話番号で検索"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <button onClick={() => setShowForm(true)} className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700 flex-shrink-0">+ 追加</button>
           </div>
-          {customers.length === 0 ? (
-            <div className="p-6 text-center text-gray-400 text-sm">まだ顧客が登録されていません</div>
+          {filtered.length === 0 ? (
+            <div className="p-6 text-center text-gray-400 text-sm">
+              {search ? '検索結果がありません' : 'まだ顧客が登録されていません'}
+            </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {customers.map(c => (
+              {filtered.map(c => (
                 <div key={c.id} className="p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium text-gray-800">{c.name}</p>
