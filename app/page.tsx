@@ -14,8 +14,15 @@ type Customer = {
   } | null
 }
 
+type Tenant = {
+  id: string
+  email: string
+  shopName: string | null
+}
+
 export default function Home() {
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [tenant, setTenant] = useState<Tenant | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [selected, setSelected] = useState<Customer | null>(null)
   const [name, setName] = useState('')
@@ -24,11 +31,15 @@ export default function Home() {
   const [nfcUid, setNfcUid] = useState('')
   const [status, setStatus] = useState('ACTIVE')
   const [expiresAt, setExpiresAt] = useState('')
+  const [showScanUrl, setShowScanUrl] = useState(false)
 
   const load = () =>
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    fetch('/api/auth/me').then(r => r.json()).then(setTenant)
+  }, [])
 
   const addCustomer = async () => {
     if (!name) return
@@ -53,13 +64,46 @@ export default function Home() {
     load()
   }
 
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    window.location.href = '/login'
+  }
+
+  const scanUrl = `${window.location.origin}/scan?tid=${tenant?.id}&uid=`
   const active = customers.filter(c => c.subscription?.status === 'ACTIVE').length
   const expired = customers.filter(c => c.subscription?.status === 'EXPIRED').length
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">NFC会員管理ツール</h1>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">NFC会員管理</h1>
+            {tenant?.shopName && <p className="text-sm text-gray-400">{tenant.shopName}</p>}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowScanUrl(!showScanUrl)}
+              className="text-sm text-blue-600 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-50"
+            >
+              スキャンURL
+            </button>
+            <button
+              onClick={logout}
+              className="text-sm text-gray-500 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-100"
+            >
+              ログアウト
+            </button>
+          </div>
+        </div>
+
+        {showScanUrl && tenant && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <p className="text-sm font-medium text-blue-800 mb-2">iPhoneショートカット用スキャンURL</p>
+            <p className="text-xs text-blue-600 font-mono break-all">{scanUrl}【タグUID】</p>
+            <p className="text-xs text-gray-500 mt-2">【タグUID】の部分をNFCタグのUIDに置き換えてください</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -98,7 +142,6 @@ export default function Home() {
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">NFCタグUID</label>
                 <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm font-mono" placeholder="例: 04:A1:B2:C3" value={nfcUid} onChange={e => setNfcUid(e.target.value)} />
-                <p className="text-xs text-gray-400 mt-1">タグのUIDを手入力 or iPhoneショートカットで取得</p>
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">会員ステータス</label>

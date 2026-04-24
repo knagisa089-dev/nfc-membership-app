@@ -6,6 +6,7 @@ const prisma = new PrismaClient()
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const uid = searchParams.get('uid')
+  const tenantId = searchParams.get('tid')
 
   if (!uid) {
     return NextResponse.json({ result: 'NOT_FOUND' }, { status: 400 })
@@ -20,7 +21,8 @@ export async function GET(request: Request) {
     }
   })
 
-  if (!tag) {
+  // テナントIDが指定されている場合は一致確認
+  if (!tag || (tenantId && tag.customer.tenantId !== tenantId)) {
     await prisma.scanLog.create({
       data: { nfcUid: uid, result: 'NOT_FOUND' }
     })
@@ -37,7 +39,6 @@ export async function GET(request: Request) {
       status = 'SUSPENDED'
     } else if (expiresAt > now) {
       status = 'ACTIVE'
-      // DBも自動更新
       if (subscription.status !== 'ACTIVE') {
         await prisma.subscription.update({
           where: { customerId: tag.customerId },
@@ -46,7 +47,6 @@ export async function GET(request: Request) {
       }
     } else {
       status = 'EXPIRED'
-      // DBも自動更新
       if (subscription.status !== 'EXPIRED') {
         await prisma.subscription.update({
           where: { customerId: tag.customerId },
