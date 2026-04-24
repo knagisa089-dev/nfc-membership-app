@@ -32,6 +32,7 @@ export default function Home() {
   const [status, setStatus] = useState('ACTIVE')
   const [expiresAt, setExpiresAt] = useState('')
   const [showScanUrl, setShowScanUrl] = useState(false)
+  const [origin, setOrigin] = useState('')
 
   const load = () =>
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
@@ -39,6 +40,7 @@ export default function Home() {
   useEffect(() => {
     load()
     fetch('/api/auth/me').then(r => r.json()).then(setTenant)
+    setOrigin(window.location.origin)
   }, [])
 
   const addCustomer = async () => {
@@ -69,7 +71,7 @@ export default function Home() {
     window.location.href = '/login'
   }
 
-  const scanUrl = `${window.location.origin}/scan?tid=${tenant?.id}&uid=`
+  const scanUrl = `${origin}/scan?tid=${tenant?.id}&uid=`
   const active = customers.filter(c => c.subscription?.status === 'ACTIVE').length
   const expired = customers.filter(c => c.subscription?.status === 'EXPIRED').length
 
