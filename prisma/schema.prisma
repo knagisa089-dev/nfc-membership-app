@@ -8,8 +8,21 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// テナント（お店・ユーザー）
+model Tenant {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  password     String
+  shopName     String?
+  createdAt    DateTime       @default(now())
+  customers    Customer[]
+}
+
+// 顧客
 model Customer {
   id           String        @id @default(cuid())
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name         String
   email        String?
   phone        String?
@@ -20,6 +33,7 @@ model Customer {
   subscription Subscription?
 }
 
+// NFCタグ
 model NfcTag {
   id           String   @id @default(cuid())
   uid          String   @unique
@@ -28,6 +42,7 @@ model NfcTag {
   registeredAt DateTime @default(now())
 }
 
+// サブスクリプション
 model Subscription {
   id         String   @id @default(cuid())
   customerId String   @unique
@@ -38,6 +53,7 @@ model Subscription {
   updatedAt  DateTime @updatedAt
 }
 
+// スキャン履歴
 model ScanLog {
   id        String   @id @default(cuid())
   nfcUid    String

@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PASSWORD = 'cafeplage0809'
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname.startsWith('/scan')) return NextResponse.next()
   if (pathname.startsWith('/api/scan')) return NextResponse.next()
   if (pathname.startsWith('/login')) return NextResponse.next()
-  if (pathname.startsWith('/api/login')) return NextResponse.next()
+  if (pathname.startsWith('/signup')) return NextResponse.next()
+  if (pathname.startsWith('/api/auth')) return NextResponse.next()
+  if (pathname.startsWith('/api/cron')) return NextResponse.next()
 
-  const auth = request.cookies.get('auth')
-  if (auth?.value === PASSWORD) return NextResponse.next()
+  const tenantId = request.cookies.get('tenant_id')
+  if (tenantId?.value) return NextResponse.next()
 
   return NextResponse.redirect(new URL('/login', request.url))
 }
