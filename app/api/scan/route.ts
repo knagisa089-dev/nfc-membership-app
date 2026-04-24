@@ -27,7 +27,34 @@ export async function GET(request: Request) {
     return NextResponse.json({ result: 'NOT_FOUND' })
   }
 
-  const status = tag.customer.subscription?.status ?? 'NOT_FOUND'
+  const subscription = tag.customer.subscription
+  const now = new Date()
+  let status = 'NOT_FOUND'
+
+  if (subscription) {
+    const expiresAt = new Date(subscription.expiresAt)
+    if (subscription.status === 'SUSPENDED') {
+      status = 'SUSPENDED'
+    } else if (expiresAt > now) {
+      status = 'ACTIVE'
+      // DBも自動更新
+      if (subscription.status !== 'ACTIVE') {
+        await prisma.subscription.update({
+          where: { customerId: tag.customerId },
+          data: { status: 'ACTIVE' },
+        })
+      }
+    } else {
+      status = 'EXPIRED'
+      // DBも自動更新
+      if (subscription.status !== 'EXPIRED') {
+        await prisma.subscription.update({
+          where: { customerId: tag.customerId },
+          data: { status: 'EXPIRED' },
+        })
+      }
+    }
+  }
 
   await prisma.scanLog.create({
     data: { nfcUid: uid, result: status }
@@ -38,7 +65,7 @@ export async function GET(request: Request) {
     customer: {
       name: tag.customer.name,
       email: tag.customer.email,
-      expiresAt: tag.customer.subscription?.expiresAt,
+      expiresAt: subscription?.expiresAt,
     }
   })
 }
