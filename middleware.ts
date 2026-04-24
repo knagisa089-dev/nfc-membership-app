@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PASSWORD = 'demo1234'
+const PASSWORD = 'cafeplage0809'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
