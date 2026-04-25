@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import Stripe from 'stripe'
 import { PrismaClient } from '@prisma/client'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const prisma = new PrismaClient()
 
 export async function POST(request: Request) {
@@ -25,6 +23,9 @@ export async function POST(request: Request) {
   if (!tenant) {
     return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
   }
+
+  const Stripe = (await import('stripe')).default
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
 
   let customerId = tenant.stripeCustomerId
 
