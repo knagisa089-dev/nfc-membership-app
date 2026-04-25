@@ -1,10 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import crypto from 'crypto'
 
 const prisma = new PrismaClient()
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -16,13 +14,12 @@ export async function POST(request: Request) {
 
   const tenant = await prisma.tenant.findUnique({ where: { email } })
 
-  // セキュリティのため存在しなくても成功を返す
   if (!tenant) {
     return NextResponse.json({ ok: true })
   }
 
   const token = crypto.randomBytes(32).toString('hex')
-  const expires = new Date(Date.now() + 1000 * 60 * 60) // 1時間
+  const expires = new Date(Date.now() + 1000 * 60 * 60)
 
   await prisma.tenant.update({
     where: { email },
@@ -33,6 +30,9 @@ export async function POST(request: Request) {
   })
 
   const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
+
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   await resend.emails.send({
     from: 'NFC会員管理 <onboarding@resend.dev>',

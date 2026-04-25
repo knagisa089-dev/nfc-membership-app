@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
 import { PrismaClient } from '@prisma/client'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const prisma = new PrismaClient()
 
 export async function POST(request: Request) {
   const body = await request.text()
   const sig = request.headers.get('stripe-signature')!
 
-  let event: Stripe.Event
+  const Stripe = (await import('stripe')).default
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
+
+  let event
 
   try {
     event = stripe.webhooks.constructEvent(
       body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET ?? ''
     )
   } catch (err) {
     return NextResponse.json({ error: 'Webhook error' }, { status: 400 })
