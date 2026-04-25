@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.CheckoutSession
+    const session = event.data.object
     const customerId = session.customer as string
     const subscriptionId = session.subscription as string
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object as Stripe.Subscription
+    const subscription = event.data.object
     const customerId = subscription.customer as string
 
     await prisma.tenant.updateMany({
