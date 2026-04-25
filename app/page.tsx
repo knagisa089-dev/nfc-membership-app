@@ -20,10 +20,20 @@ type Tenant = {
   shopName: string | null
 }
 
+type ScanLog = {
+  id: string
+  nfcUid: string
+  result: string
+  scannedAt: string
+  customerName: string
+}
+
 export default function Home() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [scanLogs, setScanLogs] = useState<ScanLog[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [showLogs, setShowLogs] = useState(false)
   const [selected, setSelected] = useState<Customer | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -43,6 +53,11 @@ export default function Home() {
     fetch('/api/auth/me').then(r => r.json()).then(setTenant)
     setOrigin(window.location.origin)
   }, [])
+
+  const loadLogs = () => {
+    fetch('/api/scan-logs').then(r => r.json()).then(setScanLogs)
+    setShowLogs(true)
+  }
 
   const addCustomer = async () => {
     if (!name) return
@@ -67,9 +82,19 @@ export default function Home() {
     load()
   }
 
+  const deleteCustomer = async (id: string) => {
+    if (!confirm('この顧客を削除しますか？')) return
+    await fetch(`/api/customers/${id}`, { method: 'DELETE' })
+    load()
+  }
+
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     window.location.href = '/login'
+  }
+
+  const exportCSV = () => {
+    window.location.href = '/api/export'
   }
 
   const scanUrl = `${origin}/scan?tid=${tenant?.id}&uid=`
@@ -94,19 +119,11 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-800">NFC会員管理</h1>
             {tenant?.shopName && <p className="text-sm text-gray-400">{tenant.shopName}</p>}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowScanUrl(!showScanUrl)}
-              className="text-sm text-blue-600 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-50"
-            >
-              スキャンURL
-            </button>
-            <button
-              onClick={logout}
-              className="text-sm text-gray-500 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-100"
-            >
-              ログアウト
-            </button>
+          <div className="flex gap-2 flex-wrap justify-end">
+            <button onClick={() => setShowScanUrl(!showScanUrl)} className="text-sm text-blue-600 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-50">スキャンURL</button>
+            <button onClick={loadLogs} className="text-sm text-purple-600 border border-purple-200 px-3 py-2 rounded-lg hover:bg-purple-50">来店履歴</button>
+            <button onClick={exportCSV} className="text-sm text-green-600 border border-green-200 px-3 py-2 rounded-lg hover:bg-green-50">CSV出力</button>
+            <button onClick={logout} className="text-sm text-gray-500 border border-gray-200 px-3 py-2 rounded-lg hover:bg-gray-100">ログアウト</button>
           </div>
         </div>
 
@@ -115,6 +132,39 @@ export default function Home() {
             <p className="text-sm font-medium text-blue-800 mb-2">iPhoneショートカット用スキャンURL</p>
             <p className="text-xs text-blue-600 font-mono break-all">{scanUrl}【タグUID】</p>
             <p className="text-xs text-gray-500 mt-2">【タグUID】の部分をNFCタグのUIDに置き換えてください</p>
+          </div>
+        )}
+
+        {showLogs && (
+          <div className="bg-white rounded-xl border border-gray-200 mb-6">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="font-semibold text-gray-800">来店履歴（直近100件）</h2>
+              <button onClick={() => setShowLogs(false)} className="text-sm text-gray-400 hover:text-gray-600">閉じる</button>
+            </div>
+            {scanLogs.length === 0 ? (
+              <div className="p-6 text-center text-gray-400 text-sm">まだ履歴がありません</div>
+            ) : (
+              <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                {scanLogs.map(l => (
+                  <div key={l.id} className="p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{l.customerName}</p>
+                      <p className="text-xs text-gray-400">{new Date(l.scannedAt).toLocaleString('ja-JP')}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      l.result === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                      l.result === 'EXPIRED' ? 'bg-red-100 text-red-600' :
+                      l.result === 'NOT_FOUND' ? 'bg-gray-100 text-gray-500' :
+                      'bg-orange-100 text-orange-600'
+                    }`}>
+                      {l.result === 'ACTIVE' ? '有効' :
+                       l.result === 'EXPIRED' ? '期限切れ' :
+                       l.result === 'NOT_FOUND' ? '未登録' : '停止中'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -177,7 +227,7 @@ export default function Home() {
         )}
 
         <div className="bg-white rounded-xl border border-gray-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center gap-4">
+          <div className="p-4 border-b border-gray-200 flex items-center gap-3">
             <h2 className="font-semibold text-gray-800 flex-shrink-0">顧客一覧</h2>
             <input
               className="flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm"
@@ -219,6 +269,12 @@ export default function Home() {
                       className="text-xs text-blue-600 hover:underline"
                     >
                       編集
+                    </button>
+                    <button
+                      onClick={() => deleteCustomer(c.id)}
+                      className="text-xs text-red-400 hover:underline"
+                    >
+                      削除
                     </button>
                   </div>
                 </div>
