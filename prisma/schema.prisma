@@ -15,6 +15,9 @@ model Tenant {
   shopName          String?
   resetToken        String?
   resetTokenExpires DateTime?
+  plan              Plan      @default(FREE)
+  stripeCustomerId  String?
+  stripeSubId       String?
   createdAt         DateTime  @default(now())
   customers         Customer[]
 }
@@ -62,4 +65,10 @@ enum Status {
   ACTIVE
   EXPIRED
   SUSPENDED
+}
+
+enum Plan {
+  FREE
+  STANDARD
+  PRO
 }
