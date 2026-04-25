@@ -4,6 +4,12 @@ import { cookies } from 'next/headers'
 
 const prisma = new PrismaClient()
 
+const PLAN_LIMITS = {
+  FREE: 30,
+  STANDARD: 200,
+  PRO: Infinity,
+}
+
 export async function GET() {
   const cookieStore = await cookies()
   const tenantId = cookieStore.get('tenant_id')?.value
@@ -30,6 +36,20 @@ export async function POST(request: Request) {
 
   if (!tenantId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
+  if (!tenant) {
+    return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+  }
+
+  const limit = PLAN_LIMITS[tenant.plan]
+  const count = await prisma.customer.count({ where: { tenantId } })
+
+  if (count >= limit) {
+    return NextResponse.json({
+      error: `現在のプラン（${tenant.plan === 'FREE' ? 'フリー' : tenant.plan === 'STANDARD' ? 'スタンダード' : 'プロ'}）では${limit}人までしか登録できません。プランをアップグレードしてください。`
+    }, { status: 403 })
   }
 
   const body = await request.json()
