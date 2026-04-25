@@ -18,6 +18,7 @@ type Tenant = {
   id: string
   email: string
   shopName: string | null
+  plan: string
 }
 
 type ScanLog = {
@@ -111,6 +112,9 @@ export default function Home() {
     )
   })
 
+  const planLabel = tenant?.plan === 'PRO' ? 'プロ' : tenant?.plan === 'STANDARD' ? 'スタンダード' : 'フリー'
+  const planColor = tenant?.plan === 'PRO' ? 'text-purple-600 border-purple-200 bg-purple-50' : tenant?.plan === 'STANDARD' ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-gray-500 border-gray-200'
+
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -120,9 +124,11 @@ export default function Home() {
             {tenant?.shopName && <p className="text-sm text-gray-400">{tenant.shopName}</p>}
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
+            <span className={`text-xs border px-3 py-2 rounded-lg ${planColor}`}>{planLabel}プラン</span>
             <button onClick={() => setShowScanUrl(!showScanUrl)} className="text-sm text-blue-600 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-50">スキャンURL</button>
             <button onClick={loadLogs} className="text-sm text-purple-600 border border-purple-200 px-3 py-2 rounded-lg hover:bg-purple-50">来店履歴</button>
             <button onClick={exportCSV} className="text-sm text-green-600 border border-green-200 px-3 py-2 rounded-lg hover:bg-green-50">CSV出力</button>
+            <a href="/pricing" className="text-sm text-yellow-600 border border-yellow-200 px-3 py-2 rounded-lg hover:bg-yellow-50">プラン変更</a>
             <button onClick={logout} className="text-sm text-gray-500 border border-gray-200 px-3 py-2 rounded-lg hover:bg-gray-100">ログアウト</button>
           </div>
         </div>
