@@ -8,6 +8,10 @@ type Result = {
   customer?: {
     name: string
     email: string | null
+    phone: string | null
+    address: string | null
+    birthday: string | null
+    note: string | null
     expiresAt: string | null
   }
 }
@@ -23,7 +27,8 @@ function ScanContent() {
       setLoading(false)
       return
     }
-    fetch(`/api/scan?uid=${uid}`)
+    const tid = searchParams.get('tid')
+    fetch(`/api/scan?uid=${uid}${tid ? `&tid=${tid}` : ''}`)
       .then(r => r.json())
       .then(d => {
         setData(d)
@@ -67,7 +72,7 @@ function ScanContent() {
         }`}>
           {isActive ? '✓' : '✗'}
         </div>
-        <h1 className={`text-3xl font-bold mb-2 ${
+        <h1 className={`text-3xl font-bold mb-6 ${
           isActive ? 'text-green-700' :
           isExpired ? 'text-red-700' :
           isSuspended ? 'text-orange-700' :
@@ -78,20 +83,53 @@ function ScanContent() {
            isSuspended ? '利用停止中' :
            '未登録のタグ'}
         </h1>
+
         {data?.customer && (
-          <div className="bg-white rounded-xl p-6 border border-gray-200 mt-6 text-left">
-            <p className="font-semibold text-gray-800 text-lg">{data.customer.name}</p>
+          <div className="bg-white rounded-xl p-6 border border-gray-200 text-left space-y-3">
+            <div>
+              <p className="text-xs text-gray-400">氏名</p>
+              <p className="font-semibold text-gray-800 text-lg">{data.customer.name}</p>
+            </div>
             {data.customer.email && (
-              <p className="text-sm text-gray-400 mt-1">{data.customer.email}</p>
+              <div>
+                <p className="text-xs text-gray-400">メールアドレス</p>
+                <p className="text-sm text-gray-700">{data.customer.email}</p>
+              </div>
+            )}
+            {data.customer.phone && (
+              <div>
+                <p className="text-xs text-gray-400">電話番号</p>
+                <p className="text-sm text-gray-700">{data.customer.phone}</p>
+              </div>
+            )}
+            {data.customer.address && (
+              <div>
+                <p className="text-xs text-gray-400">住所</p>
+                <p className="text-sm text-gray-700">{data.customer.address}</p>
+              </div>
+            )}
+            {data.customer.birthday && (
+              <div>
+                <p className="text-xs text-gray-400">誕生日</p>
+                <p className="text-sm text-gray-700">{data.customer.birthday}</p>
+              </div>
+            )}
+            {data.customer.note && (
+              <div>
+                <p className="text-xs text-gray-400">メモ</p>
+                <p className="text-sm text-gray-700">{data.customer.note}</p>
+              </div>
             )}
             {data.customer.expiresAt && (
-              <p className="text-sm text-gray-500 mt-3">
-                有効期限：{new Date(data.customer.expiresAt).toLocaleDateString('ja-JP')}
-              </p>
+              <div className={`pt-3 border-t border-gray-100`}>
+                <p className="text-xs text-gray-400">有効期限</p>
+                <p className="text-sm font-medium text-gray-700">{new Date(data.customer.expiresAt).toLocaleDateString('ja-JP')}</p>
+              </div>
             )}
           </div>
         )}
-        <a href="/" className="inline-block mt-8 text-sm text-gray-400 hover:text-gray-600">
+
+        <a href="/dashboard" className="inline-block mt-8 text-sm text-gray-400 hover:text-gray-600">
           管理画面に戻る
         </a>
       </div>

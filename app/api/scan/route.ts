@@ -21,7 +21,6 @@ export async function GET(request: Request) {
     }
   })
 
-  // テナントIDが指定されている場合は一致確認
   if (!tag || (tenantId && tag.customer.tenantId !== tenantId)) {
     await prisma.scanLog.create({
       data: { nfcUid: uid, result: 'NOT_FOUND' }
@@ -65,6 +64,10 @@ export async function GET(request: Request) {
     customer: {
       name: tag.customer.name,
       email: tag.customer.email,
+      phone: tag.customer.phone,
+      address: tag.customer.address,
+      birthday: tag.customer.birthday,
+      note: tag.customer.note,
       expiresAt: subscription?.expiresAt,
     }
   })

@@ -7,6 +7,9 @@ type Customer = {
   name: string
   email: string | null
   phone: string | null
+  address: string | null
+  birthday: string | null
+  note: string | null
   nfcTag: { uid: string } | null
   subscription: {
     status: string
@@ -29,7 +32,7 @@ type ScanLog = {
   customerName: string
 }
 
-export default function Home() {
+export default function Dashboard() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([])
@@ -39,6 +42,9 @@ export default function Home() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+  const [birthday, setBirthday] = useState('')
+  const [note, setNote] = useState('')
   const [nfcUid, setNfcUid] = useState('')
   const [status, setStatus] = useState('ACTIVE')
   const [expiresAt, setExpiresAt] = useState('')
@@ -67,14 +73,14 @@ export default function Home() {
     const res = await fetch('/api/customers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone }),
+      body: JSON.stringify({ name, email, phone, address, birthday, note }),
     })
     const data = await res.json()
     if (!res.ok) {
       setLimitError(data.error)
       return
     }
-    setName(''); setEmail(''); setPhone('')
+    setName(''); setEmail(''); setPhone(''); setAddress(''); setBirthday(''); setNote('')
     setShowForm(false)
     load()
   }
@@ -115,7 +121,8 @@ export default function Home() {
     return (
       c.name.toLowerCase().includes(q) ||
       c.email?.toLowerCase().includes(q) ||
-      c.phone?.includes(q)
+      c.phone?.includes(q) ||
+      c.address?.toLowerCase().includes(q)
     )
   })
 
@@ -212,6 +219,12 @@ export default function Home() {
               <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" placeholder="名前（必須）" value={name} onChange={e => setName(e.target.value)} />
               <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" placeholder="メールアドレス" value={email} onChange={e => setEmail(e.target.value)} />
               <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" placeholder="電話番号" value={phone} onChange={e => setPhone(e.target.value)} />
+              <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" placeholder="住所" value={address} onChange={e => setAddress(e.target.value)} />
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">誕生日</label>
+                <input type="date" className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={birthday} onChange={e => setBirthday(e.target.value)} />
+              </div>
+              <textarea className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" placeholder="メモ" rows={2} value={note} onChange={e => setNote(e.target.value)} />
               <div className="flex gap-2">
                 <button onClick={addCustomer} className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">追加する</button>
                 <button onClick={() => setShowForm(false)} className="text-gray-500 text-sm px-4 py-2 rounded-lg hover:bg-gray-100">キャンセル</button>
@@ -253,7 +266,7 @@ export default function Home() {
             <h2 className="font-semibold text-gray-800 flex-shrink-0">顧客一覧</h2>
             <input
               className="flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm"
-              placeholder="名前・メール・電話番号で検索"
+              placeholder="名前・メール・電話・住所で検索"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -270,6 +283,7 @@ export default function Home() {
                   <div>
                     <p className="font-medium text-gray-800">{c.name}</p>
                     <p className="text-sm text-gray-400">{c.email ?? '—'} {c.phone ? `/ ${c.phone}` : ''}</p>
+                    {c.address && <p className="text-xs text-gray-300 mt-1">{c.address}</p>}
                     <p className="text-xs text-gray-300 mt-1">タグ: {c.nfcTag?.uid ?? '未登録'}</p>
                   </div>
                   <div className="flex items-center gap-3">
