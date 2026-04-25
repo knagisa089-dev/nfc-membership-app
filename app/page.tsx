@@ -45,6 +45,7 @@ export default function Home() {
   const [showScanUrl, setShowScanUrl] = useState(false)
   const [origin, setOrigin] = useState('')
   const [search, setSearch] = useState('')
+  const [limitError, setLimitError] = useState('')
 
   const load = () =>
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
@@ -62,11 +63,17 @@ export default function Home() {
 
   const addCustomer = async () => {
     if (!name) return
-    await fetch('/api/customers', {
+    setLimitError('')
+    const res = await fetch('/api/customers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone }),
     })
+    const data = await res.json()
+    if (!res.ok) {
+      setLimitError(data.error)
+      return
+    }
     setName(''); setEmail(''); setPhone('')
     setShowForm(false)
     load()
@@ -188,6 +195,15 @@ export default function Home() {
             <p className="text-3xl font-bold text-red-500 mt-1">{expired}</p>
           </div>
         </div>
+
+        {limitError && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <p className="text-sm text-red-700">{limitError}</p>
+            <a href="/pricing" className="inline-block mt-2 text-sm font-medium text-red-600 underline">
+              プランをアップグレードする →
+            </a>
+          </div>
+        )}
 
         {showForm && (
           <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
