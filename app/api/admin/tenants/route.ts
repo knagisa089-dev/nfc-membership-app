@@ -22,16 +22,15 @@ export async function GET() {
     include: {
       _count: { select: { customers: true } }
     },
-    select: {
-      id: true,
-      email: true,
-      shopName: true,
-      plan: true,
-      isAdmin: true,
-      createdAt: true,
-      _count: true,
-    }
   })
 
-  return NextResponse.json(tenants)
+  return NextResponse.json(tenants.map(t => ({
+    id: t.id,
+    email: t.email,
+    shopName: t.shopName,
+    plan: t.plan,
+    isAdmin: t.isAdmin,
+    createdAt: t.createdAt,
+    _count: t._count,
+  })))
 }
