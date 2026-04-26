@@ -17,6 +17,21 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // 個人情報の更新
+  if (body.name || body.email !== undefined || body.phone !== undefined || body.address !== undefined || body.birthday !== undefined || body.note !== undefined) {
+    await prisma.customer.update({
+      where: { id: customerId },
+      data: {
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        address: body.address,
+        birthday: body.birthday,
+        note: body.note,
+      },
+    })
+  }
+
   if (body.nfcUid) {
     const existing = await prisma.nfcTag.findUnique({ where: { customerId } })
     if (existing) {

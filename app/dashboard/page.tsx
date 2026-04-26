@@ -85,12 +85,12 @@ export default function Dashboard() {
     load()
   }
 
-  const saveTag = async () => {
+  const saveCustomer = async () => {
     if (!selected) return
     await fetch(`/api/customers/${selected.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nfcUid, status, expiresAt }),
+      body: JSON.stringify({ name, email, phone, address, birthday, note, nfcUid, status, expiresAt }),
     })
     setSelected(null)
     load()
@@ -235,9 +235,33 @@ export default function Dashboard() {
 
         {selected && (
           <div className="bg-white rounded-xl border border-blue-200 p-6 mb-4">
-            <h2 className="font-semibold text-gray-800 mb-4">{selected.name} の設定</h2>
+            <h2 className="font-semibold text-gray-800 mb-4">{selected.name} を編集</h2>
             <div className="space-y-3">
               <div>
+                <label className="text-xs text-gray-500 mb-1 block">名前</label>
+                <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={name} onChange={e => setName(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">メールアドレス</label>
+                <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={email} onChange={e => setEmail(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">電話番号</label>
+                <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={phone} onChange={e => setPhone(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">住所</label>
+                <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={address} onChange={e => setAddress(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">誕生日</label>
+                <input type="date" className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={birthday} onChange={e => setBirthday(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">メモ</label>
+                <textarea className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" rows={2} value={note} onChange={e => setNote(e.target.value)} />
+              </div>
+              <div className="border-t border-gray-100 pt-3">
                 <label className="text-xs text-gray-500 mb-1 block">NFCタグUID</label>
                 <input className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm font-mono" placeholder="例: 04:A1:B2:C3" value={nfcUid} onChange={e => setNfcUid(e.target.value)} />
               </div>
@@ -254,7 +278,7 @@ export default function Dashboard() {
                 <input type="date" className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
               </div>
               <div className="flex gap-2">
-                <button onClick={saveTag} className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">保存する</button>
+                <button onClick={saveCustomer} className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">保存する</button>
                 <button onClick={() => setSelected(null)} className="text-gray-500 text-sm px-4 py-2 rounded-lg hover:bg-gray-100">キャンセル</button>
               </div>
             </div>
@@ -298,6 +322,12 @@ export default function Dashboard() {
                     <button
                       onClick={() => {
                         setSelected(c)
+                        setName(c.name)
+                        setEmail(c.email ?? '')
+                        setPhone(c.phone ?? '')
+                        setAddress(c.address ?? '')
+                        setBirthday(c.birthday ?? '')
+                        setNote(c.note ?? '')
                         setNfcUid(c.nfcTag?.uid ?? '')
                         setStatus(c.subscription?.status ?? 'ACTIVE')
                         setExpiresAt(c.subscription?.expiresAt ? c.subscription.expiresAt.slice(0, 10) : '')
