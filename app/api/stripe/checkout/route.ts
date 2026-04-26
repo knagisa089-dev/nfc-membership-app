@@ -15,9 +15,15 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { plan } = body
 
-  const priceId = plan === 'STANDARD'
-    ? process.env.STRIPE_STANDARD_PRICE_ID
-    : process.env.STRIPE_PRO_PRICE_ID
+  const priceId =
+    plan === 'STANDARD' ? process.env.STRIPE_STANDARD_PRICE_ID :
+    plan === 'PRO' ? process.env.STRIPE_PRO_PRICE_ID :
+    plan === 'LIFETIME' ? process.env.STRIPE_LIFETIME_PRICE_ID :
+    null
+
+  if (!priceId) {
+    return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+  }
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
   if (!tenant) {
@@ -41,13 +47,16 @@ export async function POST(request: Request) {
     })
   }
 
+  const isLifetime = plan === 'LIFETIME'
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
-    mode: 'subscription',
+    mode: isLifetime ? 'payment' : 'subscription',
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.NEXTAUTH_URL}/pricing?success=true`,
     cancel_url: `${process.env.NEXTAUTH_URL}/pricing?canceled=true`,
+    metadata: { tenantId, plan },
   })
 
   return NextResponse.json({ url: session.url })

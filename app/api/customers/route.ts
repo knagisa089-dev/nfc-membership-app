@@ -4,10 +4,11 @@ import { cookies } from 'next/headers'
 
 const prisma = new PrismaClient()
 
-const PLAN_LIMITS = {
+const PLAN_LIMITS: Record<string, number> = {
   FREE: 30,
   STANDARD: 200,
   PRO: Infinity,
+  LIFETIME: Infinity,
 }
 
 export async function GET() {
@@ -43,13 +44,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
   }
 
-  const limit = PLAN_LIMITS[tenant.plan]
-  const count = await prisma.customer.count({ where: { tenantId } })
+  // adminは無制限
+  if (!tenant.isAdmin) {
+    const limit = PLAN_LIMITS[tenant.plan] ?? 30
+    const count = await prisma.customer.count({ where: { tenantId } })
 
-  if (count >= limit) {
-    return NextResponse.json({
-      error: `現在のプラン（${tenant.plan === 'FREE' ? 'フリー' : tenant.plan === 'STANDARD' ? 'スタンダード' : 'プロ'}）では${limit}人までしか登録できません。プランをアップグレードしてください。`
-    }, { status: 403 })
+    if (count >= limit) {
+      return NextResponse.json({
+        error: `現在のプラン（${tenant.plan === 'FREE' ? 'フリー' : tenant.plan === 'STANDARD' ? 'スタンダード' : 'プロ'}）では${limit}人までしか登録できません。プランをアップグレードしてください。`
+      }, { status: 403 })
+    }
   }
 
   const body = await request.json()
@@ -59,6 +63,8 @@ export async function POST(request: Request) {
       name: body.name,
       email: body.email,
       phone: body.phone,
+      address: body.address,
+      birthday: body.birthday,
       note: body.note,
     },
   })
