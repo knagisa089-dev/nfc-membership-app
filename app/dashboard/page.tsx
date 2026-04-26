@@ -22,6 +22,7 @@ type Tenant = {
   email: string
   shopName: string | null
   plan: string
+  isAdmin: boolean
 }
 
 type ScanLog = {
@@ -126,8 +127,8 @@ export default function Dashboard() {
     )
   })
 
-  const planLabel = tenant?.plan === 'PRO' ? 'プロ' : tenant?.plan === 'STANDARD' ? 'スタンダード' : 'フリー'
-  const planColor = tenant?.plan === 'PRO' ? 'text-purple-600 border-purple-200 bg-purple-50' : tenant?.plan === 'STANDARD' ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-gray-500 border-gray-200'
+  const planLabel = tenant?.plan === 'PRO' ? 'プロ' : tenant?.plan === 'STANDARD' ? 'スタンダード' : tenant?.plan === 'LIFETIME' ? 'ライフタイム' : 'フリー'
+  const planColor = tenant?.plan === 'PRO' ? 'text-purple-600 border-purple-200 bg-purple-50' : tenant?.plan === 'STANDARD' ? 'text-blue-600 border-blue-200 bg-blue-50' : tenant?.plan === 'LIFETIME' ? 'text-orange-600 border-orange-200 bg-orange-50' : 'text-gray-500 border-gray-200'
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -139,6 +140,9 @@ export default function Dashboard() {
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
             <span className={`text-xs border px-3 py-2 rounded-lg ${planColor}`}>{planLabel}プラン</span>
+            {tenant?.isAdmin && (
+              <a href="/admin" className="text-sm text-red-600 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-50">管理者</a>
+            )}
             <button onClick={() => setShowScanUrl(!showScanUrl)} className="text-sm text-blue-600 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-50">スキャンURL</button>
             <button onClick={loadLogs} className="text-sm text-purple-600 border border-purple-200 px-3 py-2 rounded-lg hover:bg-purple-50">来店履歴</button>
             <button onClick={exportCSV} className="text-sm text-green-600 border border-green-200 px-3 py-2 rounded-lg hover:bg-green-50">CSV出力</button>
